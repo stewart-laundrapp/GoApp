@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/mux"
 	"html/template"
 	"log"
 	"math"
@@ -237,30 +238,32 @@ func main() {
 	//	log.Fatal("api key must be set")
 	//}
 	// Create Server and Route Handlers
-
-	fs := http.FileServer(http.Dir("assets"))
-	http.Handle("/assets/", http.StripPrefix("/assets/", fs))
-
-	http.HandleFunc("/search", searchHandler)
-	http.HandleFunc("/top-headlines", topHeadlines)
-	http.HandleFunc("/", indexHandler)
-	http.ListenAndServe(":8080", nil)
-	//srv := &http.Server{
-	//	Handler:      r,
-	//	Addr:         ":8080",
-	//	ReadTimeout:  10 * time.Second,
-	//	WriteTimeout: 10 * time.Second,
-	//}
+	r := mux.NewRouter()
+	//serveMux := http.NewServeMux()
+	//Declaring the asset folder to be explicitly handled by our webserver
+	//fs := http.FileServer(http.Dir("assets"))
+	//http.Handle("/assets/", http.StripPrefix("/assets/", fs))
+	r.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", http.FileServer(http.Dir("assets"))))
+	r.HandleFunc("/search", searchHandler)
+	r.HandleFunc("/top-headlines", topHeadlines)
+	r.HandleFunc("/", indexHandler)
+	//http.ListenAndServe(":8080", nil)
+	srv := &http.Server{
+		Handler:      r,
+		Addr:         ":8080",
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
 	// Start Server
-	//go func() {
-	//	log.Println("Starting Server")
-	//	if err := http.ListenAndServe(":8080", nil); err != nil {
-	//		log.Fatal(err)
-	//	}
-	//}()
+	go func() {
+		log.Println("Starting Server")
+		if err := srv.ListenAndServe(); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	// Graceful Shutdown
-	//waitForShutdown(srv)
+	waitForShutdown(srv)
 }
 
 /*
