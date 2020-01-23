@@ -1,0 +1,32 @@
+#!/bin/bash
+if [[ $1 != "" ]]; then
+  docker container stop $1
+  wait
+  docker container rm $1
+  wait
+
+  echo "-----------------
+  "
+  docker container ls
+  echo "
+  "
+  if [[ $2 != "" ]]; then
+  docker build -t $2 .
+  wait
+  if [[ $3 = "" ]]; then
+  docker run -p 8080:8080 -d $2:latest
+  else  
+   docker run -p $3 -d $2:latest
+   fi
+  wait
+   echo "-----------------
+   "
+  docker ps
+  echo "
+  "
+  echo "Docker container removed and updated"
+  else
+    echo "Enter a tag name"
+    return
+  fi
+fi
